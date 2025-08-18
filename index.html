@@ -2,148 +2,239 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Simulateur de Crédit - Période de Grâce</title>
+<title>Simulateur de crédit Paositra Finances</title>
 <style>
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; margin: 0; padding: 0 10px 30px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; font-size: 14px;}
-header { background: #004085; color: white; width: 100%; max-width: 600px; padding: 12px 20px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px;}
-header img { width: 35px; height: 35px; object-fit: contain;}
-header h1 { font-weight: 700; font-size: 1.3rem; margin: 0;}
-main { background: white; padding: 20px 25px; border-radius: 10px; box-shadow: 0 4px 12px rgb(0 0 0 / 0.1); max-width: 600px; width: 100%; }
-label { display: block; margin-bottom: 6px; font-weight: 600; color: #333; font-size: 0.9rem;}
-input[type="number"] { width: 100%; padding: 6px 8px; margin-bottom: 15px; border: 1px solid #bbb; border-radius: 5px; font-size: 0.9rem; box-sizing: border-box; }
-button { background: #004085; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; width: 100%; transition: background-color 0.3s ease; }
-button:hover { background: #002752; }
-.resultMensualite { margin-top: 10px; font-size: 1rem; font-weight: 600; color: #004085; text-align: center; }
-.result { margin-top: 18px; font-size: 1.1rem; font-weight: 700; color: #004085; text-align: center; }
-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.8rem; }
-table thead { background: #004085; color: white; }
-table th, table td { padding: 6px 8px; border: 1px solid #ccc; text-align: right; }
-table th:first-child, table td:first-child { text-align: center; }
-table tfoot tr { font-weight: 700; background: #d9e6f2; color: #004085; }
-.grace { background: #fff3cd; }
-@media (max-width: 480px) { main { padding: 15px 15px; } table th, table td { font-size: 0.7rem; padding: 5px 4px; } }
+  body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    background: #f8f9fa;
+    font-size: 14px;
+    color: #333;
+  }
+
+  .container {
+    width: 50%;
+    margin: 0 auto;
+  }
+
+  .header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    text-align: center;
+  }
+  .logo { height: 60px; max-width: 50%; }
+  .title { font-size: 1.8rem; color: #2c3e50; margin: 0; }
+  @media (max-width: 600px) {
+    .title { font-size: 1.4rem; }
+    .logo { height: 50px; }
+  }
+
+  .form-container {
+    background: #fff;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+  }
+  label { font-weight: bold; margin-top: 8px; display: block; }
+  select, input, button {
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    width: 100%;
+    font-size: 14px;
+    box-sizing: border-box;
+  }
+  button {
+    background: #3498db;
+    color: #fff;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 15px;
+    border: none;
+  }
+  button:hover { background: #2980b9; }
+
+  .result-box {
+    background: #fff;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    table-layout: fixed;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 6px;
+    text-align: right;
+    font-size: 12px;
+    overflow: hidden;
+  }
+  th { background: #2c3e50; color: white; text-align: center; }
+  td:first-child, th:first-child { width: 10%; }
+  td:nth-child(2), th:nth-child(2) { width: 25%; }
+  td:nth-child(3), th:nth-child(3) { width: 20%; }
+  td:nth-child(4), th:nth-child(4) { width: 20%; }
+  td:nth-child(5), th:nth-child(5) { width: 25%; }
+  tr:nth-child(even) { background: #f2f2f2; }
+  tr:hover { background: #eaf2f8; }
+  .grace { background: #ffeeba !important; }
+  .total-row { font-weight: bold; background: #dff0d8; }
+  .summary { font-size: 14px; line-height: 1.6; }
 </style>
 </head>
 <body>
+<div class="container">
+  <header class="header">
+    <img src="logo.png" alt="Paositra Finances" class="logo">
+    <h1 class="title">Simulateur de crédit Paositra Finances</h1>
+  </header>
 
-<header>
-<img src="mon-logo.png" alt="Logo" />
-<h1>Simulateur de Crédit</h1>
-</header>
+  <div class="form-container">
+    <label for="produit">Choisir un produit :</label>
+    <select id="produit" onchange="updateProduit()">
+      <option value="">-- Sélectionnez --</option>
+      <option value="KETRIKA">KETRIKA</option>
+      <option value="HERIJIKA">HERIJIKA</option>
+      <option value="HERIJIKA_PLUS">HERIJIKA PLUS</option>
+      <option value="HERIJIKA_PME">HERIJIKA PME</option>
+    </select>
 
-<main>
-<form id="creditForm">
-<label for="montant">Montant du prêt (MGA)</label>
-<input type="number" id="montant" min="1000" step="100" required placeholder="Ex: 1500000" />
+    <label for="montant">Montant du prêt (Ariary):</label>
+    <input type="number" id="montant">
 
-<label for="duree">Durée (mois)</label>
-<input type="number" id="duree" min="6" max="360" required placeholder="Ex: 60" />
+    <label for="taux">Taux d'intérêt annuel (%):</label>
+    <input type="number" id="taux">
 
-<label for="taux">Taux annuel (%)</label>
-<input type="number" id="taux" min="0.1" step="0.01" required placeholder="Ex: 20" />
+    <label for="duree">Durée (mois):</label>
+    <input type="number" id="duree">
 
-<label for="periodeGrace">Période de grâce (mois)</label>
-<input type="number" id="periodeGrace" min="0" max="360" step="1" value="0" placeholder="Ex: 6" />
+    <label for="periodeGrace">Période de grâce (mois):</label>
+    <input type="number" id="periodeGrace" value="0">
 
-<button type="submit">Calculer la mensualité</button>
-<div class="resultMensualite" id="resultMensualite"></div>
-</form>
+    <button onclick="calculer()">Calculer</button>
+  </div>
 
-<div class="result" id="result"></div>
-<div id="tableauAmortissement"></div>
-</main>
+  <div id="result" class="result-box"></div>
+  <div id="resultMensualite" class="result-box"></div>
+  <div id="tableauAmortissement"></div>
+</div>
 
 <script>
-function formatAriary(amount) {
-  return amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' MGA';
-}
+const produits = {
+  KETRIKA: { taux: 39, min: 515000, max: 10300000, minDuree: 6, maxDuree: 30 },
+  HERIJIKA: { taux: 39, min: 1030000, max: 10300000, minDuree: 6, maxDuree: 24 },
+  HERIJIKA_PLUS: { taux: 39, min: 10300001, max: 51500000, minDuree: 6, maxDuree: 24 },
+  HERIJIKA_PME: { taux: null, min: 51500001, max: 154500000, minDuree: 6, maxDuree: 24 }
+};
 
-function creerTableauAmortissement(montant, duree, tauxAnnuel, periodeGrace) {
-  const tauxMensuel = tauxAnnuel / 100 / 12;
-  let capitalRestant = montant;
-  let totalInterets = 0;
-  let totalCapitalRembourse = 0;
-  let totalMensualites = 0;
-
-  const dureeRestante = duree - periodeGrace;
-  // Mensualité constante après période de grâce
-  const mensualiteConstante = (capitalRestant * tauxMensuel) / (1 - Math.pow(1 + tauxMensuel, -dureeRestante));
-
-  let html = '<table><thead><tr>' +
-      '<th>Mois</th><th>Capital restant (MGA)</th><th>Intérêts (MGA)</th><th>Capital remboursé (MGA)</th><th>Mensualité payée (MGA)</th>' +
-      '</tr></thead><tbody>';
-
-  for(let mois=1; mois<=duree; mois++){
-    let interets = 0;
-    let capitalRembourse = 0;
-    let mensualiteActuelle = 0;
-    let classe = "";
-
-    if(mois <= periodeGrace){
-      classe = "grace";
-      interets = capitalRestant * tauxMensuel;
-      capitalRembourse = 0;
-      mensualiteActuelle = interets; // paiement des intérêts pendant période de grâce
-    } else {
-      interets = capitalRestant * tauxMensuel;
-      capitalRembourse = mensualiteConstante - interets;
-      mensualiteActuelle = capitalRembourse + interets;
-      capitalRestant -= capitalRembourse;
-      if(capitalRestant < 0) capitalRestant = 0;
-    }
-
-    totalInterets += interets;
-    totalCapitalRembourse += capitalRembourse;
-    totalMensualites += mensualiteActuelle;
-
-    html += `<tr class="${classe}">` +
-        `<td>${mois}</td>` +
-        `<td>${formatAriary(capitalRestant)}</td>` +
-        `<td>${formatAriary(interets)}</td>` +
-        `<td>${formatAriary(capitalRembourse)}</td>` +
-        `<td>${formatAriary(mensualiteActuelle)}</td>` +
-        '</tr>';
+function updateProduit() {
+  const produit = document.getElementById('produit').value;
+  const tauxInput = document.getElementById('taux');
+  if (produit && produits[produit].taux !== null) {
+    tauxInput.value = produits[produit].taux;
+    tauxInput.disabled = true;
+  } else {
+    tauxInput.value = "";
+    tauxInput.disabled = false;
   }
-
-  html += '</tbody><tfoot><tr>' +
-      `<td>Total</td><td>-</td><td>${formatAriary(totalInterets)}</td>` +
-      `<td>${formatAriary(totalCapitalRembourse)}</td><td>${formatAriary(totalMensualites)}</td>` +
-      '</tr></tfoot></table>';
-
-  return html;
 }
 
-document.getElementById('creditForm').addEventListener('submit', function(event){
-  event.preventDefault();
+// Formater les nombres avec 2 décimales
+function formatAriary(val) {
+  return val.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " Ar";
+}
+
+function calculer() {
+  const produit = document.getElementById('produit').value;
   const montant = parseFloat(document.getElementById('montant').value);
+  const taux = parseFloat(document.getElementById('taux').value)/100;
   const duree = parseInt(document.getElementById('duree').value);
-  const tauxAnnuel = parseFloat(document.getElementById('taux').value);
   const periodeGrace = parseInt(document.getElementById('periodeGrace').value);
 
-  if(montant<=0 || duree<=0 || tauxAnnuel<=0 || periodeGrace<0){
-    document.getElementById('result').textContent = "Veuillez entrer des valeurs valides.";
-    document.getElementById('tableauAmortissement').innerHTML = '';
-    document.getElementById('resultMensualite').textContent = '';
+  if (!produit || isNaN(montant) || isNaN(taux) || isNaN(duree)) {
+    alert("Veuillez remplir tous les champs correctement.");
+    return;
+  }
+  if (periodeGrace >= duree) {
+    alert("La période de grâce doit être inférieure à la durée.");
     return;
   }
 
-  const tauxMensuel = tauxAnnuel / 100 / 12;
+  const conditions = produits[produit];
+  if (montant < conditions.min || montant > conditions.max || duree < conditions.minDuree || duree > conditions.maxDuree) {
+    alert(`Conditions non respectées pour ${produit}. Montant: ${formatAriary(conditions.min)} à ${formatAriary(conditions.max)}, Durée: ${conditions.minDuree} à ${conditions.maxDuree} mois.`);
+    return;
+  }
+
+  const tauxMensuel = taux/12;
   const dureeRestante = duree - periodeGrace;
-  const mensualiteConstante = (montant * tauxMensuel) / (1 - Math.pow(1 + tauxMensuel, -dureeRestante));
+  const mensualite = montant * tauxMensuel / (1 - Math.pow(1 + tauxMensuel, -dureeRestante));
 
-  document.getElementById('resultMensualite').textContent =
-    `Mensualité constante après période de grâce : ${formatAriary(mensualiteConstante)}`;
+  let capitalRestant = montant;
+  let totalPrincipal = 0, totalInterets = 0, totalMensualites = 0;
+  let tableau = `<table>
+    <thead><tr>
+      <th>Mois</th>
+      <th>Capital restant</th>
+      <th>Principal</th>
+      <th>Intérêt</th>
+      <th>Mensualité</th>
+    </tr></thead><tbody>`;
 
-  document.getElementById('result').textContent =
-      `Tableau d’amortissement généré pour ${duree - periodeGrace} mois après la période de grâce.`;
+  for (let mois = 1; mois <= duree; mois++) {
+    let interets, principal, paiement;
+    if (mois <= periodeGrace) {
+      interets = capitalRestant * tauxMensuel;
+      principal = 0;
+      paiement = interets;
+      tableau += `<tr class="grace"><td>${mois}</td><td>${formatAriary(capitalRestant)}</td><td>${formatAriary(principal)}</td><td>${formatAriary(interets)}</td><td>${formatAriary(paiement)}</td></tr>`;
+    } else {
+      interets = capitalRestant * tauxMensuel;
+      principal = mensualite - interets;
+      capitalRestant -= principal;
+      paiement = mensualite;
+      tableau += `<tr><td>${mois}</td><td>${formatAriary(Math.max(capitalRestant,0))}</td><td>${formatAriary(principal)}</td><td>${formatAriary(interets)}</td><td>${formatAriary(paiement)}</td></tr>`;
+    }
+    totalPrincipal += principal;
+    totalInterets += interets;
+    totalMensualites += paiement;
+  }
 
-  document.getElementById('tableauAmortissement').innerHTML =
-      creerTableauAmortissement(montant,duree,tauxAnnuel,periodeGrace);
-});
+  tableau += `<tr class="total-row"><td>Total</td><td>-</td><td>${formatAriary(totalPrincipal)}</td><td>${formatAriary(totalInterets)}</td><td>${formatAriary(totalMensualites)}</td></tr>`;
+  tableau += "</tbody></table>";
+
+  document.getElementById('result').innerHTML =
+    `<div class="summary">
+      <b>Produit :</b> ${produit}<br>
+      <b>Montant emprunté :</b> ${formatAriary(montant)}<br>
+      <b>Durée :</b> ${duree} mois (${periodeGrace} mois de grâce)<br>
+      <b>Taux annuel :</b> ${(taux*100).toFixed(2)}%<br>
+      <b>Total intérêts :</b> ${formatAriary(totalInterets)}<br>
+      <b>Coût total du crédit :</b> ${formatAriary(totalMensualites)}
+    </div>`;
+
+  document.getElementById('resultMensualite').innerHTML =
+    `<b>Mensualité après période de grâce :</b> ${formatAriary(mensualite)}`;
+
+  document.getElementById('tableauAmortissement').innerHTML = tableau;
+}
 </script>
-
 </body>
 </html>
-
-

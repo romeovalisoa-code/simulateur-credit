@@ -235,7 +235,7 @@
     overflow: hidden;
   }
   th { background: #2c3e50; color: white; text-align: center; }
-  td:first-child, th:first-child { width: 10%; }
+  td:first-child, th:first-child { width: 10%; text-align: center; }
   td:nth-child(2), th:nth-child(2) { width: 25%; }
   td:nth-child(3), th:nth-child(3) { width: 20%; }
   td:nth-child(4), th:nth-child(4) { width: 20%; }
@@ -246,7 +246,7 @@
   .custom-period { background: #d4edda !important; }
   .custom-period.grace { background: #fff3cd !important; border-left: 4px solid #ff9800; }
   .total-row { font-weight: bold; background: #dff0d8; }
-  .summary { font-size: 14px; line-height: 1.6; }
+  .summary { font-size: 14px; line-height: 1.6; text-align: left; }
 </style>
 </head>
 <body>
@@ -266,16 +266,16 @@
     </select>
 
     <label for="montant">Montant du prêt (Ariary):</label>
-    <input type="number" id="montant">
+    <input type="text" id="montant" inputmode="numeric" />
 
     <label for="taux">Taux d'intérêt annuel (%):</label>
-    <input type="number" id="taux" step="0.01">
+    <input type="text" id="taux" inputmode="decimal" />
 
     <label for="duree">Durée (mois):</label>
-    <input type="number" id="duree">
+    <input type="text" id="duree" inputmode="numeric" />
 
     <label for="periodeGrace">Période de grâce (mois):</label>
-    <input type="number" id="periodeGrace" value="0">
+    <input type="text" id="periodeGrace" value="0" inputmode="numeric" />
     
     <div class="mode-toggle">
       <label style="margin-bottom: 10px;">Mode de remboursement :</label>
@@ -309,6 +309,7 @@
 </div>
 
 <script>
+/* ---------- Données produits ---------- */
 const produits = {
   KETRIKA: { taux: 39, min: 515000, max: 10300000, minDuree: 6, maxDuree: 30 },
   HERIJIKA: { taux: 39, min: 1030000, max: 10300000, minDuree: 6, maxDuree: 24 },
@@ -318,22 +319,55 @@ const produits = {
 
 let paymentPeriods = [];
 
+/* ---------- UTILITAIRES de formatage / parsing ---------- */
+
+// Formatage pour affichage dans les inputs (séparateur = espace, sans décimales pour les inputs)
+// On garde le taux formaté à 2 décimales affichées.
+function formatInputInteger(value) {
+  if (value === "" || value === null || isNaN(value)) return "";
+  const n = Math.round(Number(value)); // arrondir pour affichage dans les champs (option choisie)
+  return n.toLocaleString('fr-FR').replace(/\u202F/g, ' '); // remplacer espace insécable par espace normal si besoin
+}
+function formatInputTaux(value) {
+  if (value === "" || value === null || isNaN(value)) return "";
+  // garder 2 décimales pour l'affichage du taux
+  return Number(value).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
+// Format pour affichage monétaire dans le tableau (2 décimales)
+function formatAriary(val) {
+  if (val === null || val === undefined || isNaN(val)) return "0 Ar";
+  const n = Number(val);
+  // utiliser toLocaleString pour avoir séparateur espaces et 2 décimales
+  return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') + " Ar";
+}
+
+// Parse une chaîne d'input en nombre (retire espaces et virgules)
+function parseNumberFromString(str) {
+  if (str === null || str === undefined) return NaN;
+  // autoriser la virgule ou le point comme séparateur décimal
+  const cleaned = String(str).replace(/\s/g, '').replace(/\u00A0/g, '').replace(/,/g, '.').replace(/[^\d.\-]/g, '');
+  if (cleaned === "" || cleaned === "-" || cleaned === ".") return NaN;
+  return Number(cleaned);
+}
+
+/* ---------- Mise à jour produit ---------- */
 function updateProduit() {
   const produit = document.getElementById('produit').value;
   const tauxInput = document.getElementById('taux');
   if (produit && produits[produit].taux !== null) {
-    tauxInput.value = produits[produit].taux;
+    // on définit la valeur numérique, puis on l'affiche formatée (2 décimales)
+    tauxInput.dataset.raw = produits[produit].taux;
+    tauxInput.value = formatInputTaux(produits[produit].taux);
     tauxInput.disabled = true;
   } else {
+    tauxInput.dataset.raw = "";
     tauxInput.value = "";
     tauxInput.disabled = false;
   }
 }
 
-function formatAriary(val) {
-  return val.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " Ar";
-}
-
+/* ---------- Gestion du mode et périodes personnalisées ---------- */
 function toggleCustomPayments() {
   const mode = document.querySelector('input[name="mode"]:checked').value;
   const section = document.getElementById('customPaymentsSection');
@@ -349,7 +383,7 @@ function toggleCustomPayments() {
 }
 
 function addPaymentPeriod() {
-  const id = Date.now();
+  const id = Date.now() + Math.floor(Math.random()*1000);
   paymentPeriods.push({ id, startMonth: 1, endMonth: 1, amount: 0 });
   renderPaymentPeriods();
 }
@@ -362,34 +396,155 @@ function removePaymentPeriod(id) {
 function renderPaymentPeriods() {
   const container = document.getElementById('paymentPeriods');
   container.innerHTML = paymentPeriods.map((period, index) => `
-    <div class="payment-period">
+    <div class="payment-period" data-id="${period.id}">
       <div class="payment-period-header">
         <strong>Période ${index + 1}</strong>
-        ${paymentPeriods.length > 1 ? `<button type="button" class="btn-small btn-danger" onclick="removePaymentPeriod(${period.id})">Supprimer</button>` : ''}
+        ${paymentPeriods.length > 1 ? `<button type="button" class="btn-small btn-danger" data-remove="${period.id}">Supprimer</button>` : ''}
       </div>
       <label style="font-weight: normal; font-size: 12px;">Du mois</label>
-      <input type="number" min="1" value="${period.startMonth}" onchange="updatePeriod(${period.id}, 'startMonth', this.value)">
+      <input type="text" class="custom-month" data-field="startMonth" value="${formatInputInteger(period.startMonth)}">
       <label style="font-weight: normal; font-size: 12px; margin-top: 5px;">Au mois</label>
-      <input type="number" min="1" value="${period.endMonth}" onchange="updatePeriod(${period.id}, 'endMonth', this.value)">
+      <input type="text" class="custom-month" data-field="endMonth" value="${formatInputInteger(period.endMonth)}">
       <label style="font-weight: normal; font-size: 12px; margin-top: 5px;">Mensualité (Ariary)</label>
-      <input type="number" value="${period.amount}" onchange="updatePeriod(${period.id}, 'amount', this.value)">
+      <input type="text" class="custom-amount" data-field="amount" value="${formatInputInteger(period.amount)}">
     </div>
   `).join('');
+
+  // Attacher les handlers (délégué)
+  // suppression boutons
+  container.querySelectorAll('[data-remove]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = Number(btn.getAttribute('data-remove'));
+      removePaymentPeriod(id);
+    });
+  });
+
+  // Inputs mois / montant
+  container.querySelectorAll('.custom-month').forEach(inp => {
+    inp.addEventListener('input', (e) => {
+      let raw = e.target.value;
+      // nettoyage: garder uniquement chiffres
+      let parsed = parseNumberFromString(raw);
+      if (isNaN(parsed)) parsed = "";
+      e.target.value = parsed === "" ? "" : formatInputInteger(parsed);
+      // mettre à jour le model
+      const parent = e.target.closest('.payment-period');
+      const id = Number(parent.getAttribute('data-id'));
+      const field = e.target.dataset.field;
+      updatePeriod(id, field, parsed);
+    });
+    // blur -> si vide, remettre 1
+    inp.addEventListener('blur', (e) => {
+      if (e.target.value.trim() === "") {
+        e.target.value = formatInputInteger(1);
+        const parent = e.target.closest('.payment-period');
+        const id = Number(parent.getAttribute('data-id'));
+        updatePeriod(id, e.target.dataset.field, 1);
+      }
+    });
+  });
+
+  container.querySelectorAll('.custom-amount').forEach(inp => {
+    inp.addEventListener('input', (e) => {
+      let raw = e.target.value;
+      // nettoyage: autoriser décimales mais pour les mensualités on souhaite afficher sans décimales
+      let parsed = parseNumberFromString(raw);
+      if (isNaN(parsed)) parsed = "";
+      e.target.value = parsed === "" ? "" : formatInputInteger(parsed);
+      const parent = e.target.closest('.payment-period');
+      const id = Number(parent.getAttribute('data-id'));
+      updatePeriod(id, e.target.dataset.field, parsed);
+    });
+    inp.addEventListener('blur', (e) => {
+      if (e.target.value.trim() === "") {
+        e.target.value = formatInputInteger(0);
+        const parent = e.target.closest('.payment-period');
+        const id = Number(parent.getAttribute('data-id'));
+        updatePeriod(id, e.target.dataset.field, 0);
+      }
+    });
+  });
 }
 
 function updatePeriod(id, field, value) {
   const period = paymentPeriods.find(p => p.id === id);
   if (period) {
-    period[field] = field === 'amount' ? parseFloat(value) : parseInt(value);
+    if (field === 'amount') {
+      period[field] = isNaN(Number(value)) ? 0 : Number(value);
+    } else {
+      // startMonth / endMonth -> entiers
+      period[field] = isNaN(Number(value)) ? 1 : Math.max(1, Math.floor(Number(value)));
+    }
   }
 }
 
+/* ---------- Formatage et nettoyage des inputs principaux ---------- */
+const mainNumericIdsInteger = ["montant", "duree", "periodeGrace"];
+const mainNumericIdsTaux = ["taux"]; // taux affiché en 2 décimales
+
+// Attacher écouteurs
+mainNumericIdsInteger.forEach(id => {
+  const input = document.getElementById(id);
+  input.addEventListener('input', (e) => {
+    let raw = e.target.value;
+    let parsed = parseNumberFromString(raw);
+    if (isNaN(parsed)) {
+      // autoriser effacement
+      e.target.value = raw.replace(/[^\d\s]/g,'');
+      return;
+    }
+    e.target.value = formatInputInteger(parsed);
+  });
+  input.addEventListener('blur', (e) => {
+    let parsed = parseNumberFromString(e.target.value);
+    if (isNaN(parsed)) parsed = 0;
+    e.target.value = formatInputInteger(parsed);
+  });
+});
+
+mainNumericIdsTaux.forEach(id => {
+  const input = document.getElementById(id);
+  input.addEventListener('input', (e) => {
+    // autoriser virgule ou point pour décimales
+    let raw = e.target.value;
+    let parsed = parseNumberFromString(raw);
+    if (isNaN(parsed)) {
+      e.target.value = raw.replace(/[^\d,.\s]/g,'');
+      return;
+    }
+    // afficher avec 2 décimales pendant la saisie (mais sans forcer la perte de l'édition)
+    // pour garder expérience fluide, on n'impose pas le format à chaque frappe: on ne formate qu'au blur
+  });
+  input.addEventListener('blur', (e) => {
+    let parsed = parseNumberFromString(e.target.value);
+    if (isNaN(parsed)) parsed = 0;
+    e.target.value = formatInputTaux(parsed);
+  });
+});
+
+/* ---------- Récupération des valeurs pour calculs ---------- */
+function getInputNumberInteger(id) {
+  const el = document.getElementById(id);
+  return parseNumberFromString(el.value);
+}
+function getTauxNumber(id) {
+  const el = document.getElementById(id);
+  // si le champ est disabled et on a un dataset.raw défini, on l'utilise.
+  if (el.disabled && el.dataset.raw) {
+    return Number(el.dataset.raw);
+  }
+  return parseNumberFromString(el.value);
+}
+
+/* ---------- Calculs ---------- */
+
 function calculer() {
   const produit = document.getElementById('produit').value;
-  const montant = parseFloat(document.getElementById('montant').value);
-  const taux = parseFloat(document.getElementById('taux').value)/100;
-  const duree = parseInt(document.getElementById('duree').value);
-  const periodeGrace = parseInt(document.getElementById('periodeGrace').value);
+  const montant = getInputNumberInteger('montant');
+  const tauxAnnuelPourcent = getTauxNumber('taux'); // pourcent, ex: 39
+  const taux = tauxAnnuelPourcent / 100;
+  const duree = Math.floor(getInputNumberInteger('duree'));
+  const periodeGrace = Math.floor(getInputNumberInteger('periodeGrace'));
   const mode = document.querySelector('input[name="mode"]:checked').value;
 
   if (!produit || isNaN(montant) || isNaN(taux) || isNaN(duree)) {
@@ -413,11 +568,14 @@ function calculer() {
   if (mode === 'standard') {
     calculerModeStandard(montant, tauxMensuel, duree, periodeGrace, dureeRestante, produit, taux);
   } else {
+    // s'assurer que paymentPeriods sont à jour (en cas d'édition)
+    // les périodes sont déjà mises à jour à chaque input via updatePeriod
     calculerModePersonnalise(montant, tauxMensuel, duree, periodeGrace, produit, taux);
   }
 }
 
 function calculerModeStandard(montant, tauxMensuel, duree, periodeGrace, dureeRestante, produit, taux) {
+  // calcul mensualité (après période de grâce) : annuité sur la durée restante
   const mensualite = montant * tauxMensuel / (1 - Math.pow(1 + tauxMensuel, -dureeRestante));
 
   let capitalRestant = montant;
@@ -432,7 +590,7 @@ function calculerModeStandard(montant, tauxMensuel, duree, periodeGrace, dureeRe
     </tr></thead><tbody>`;
 
   for (let mois = 1; mois <= duree; mois++) {
-    let interets, principal, paiement;
+    let interets = 0, principal = 0, paiement = 0;
     if (mois <= periodeGrace) {
       interets = capitalRestant * tauxMensuel;
       principal = 0;
@@ -441,8 +599,10 @@ function calculerModeStandard(montant, tauxMensuel, duree, periodeGrace, dureeRe
     } else {
       interets = capitalRestant * tauxMensuel;
       principal = mensualite - interets;
+      // protection si dernier paiement dépasse
+      if (principal > capitalRestant) principal = capitalRestant;
       capitalRestant -= principal;
-      paiement = mensualite;
+      paiement = principal + interets;
       tableau += `<tr><td>${mois}</td><td>${formatAriary(Math.max(capitalRestant,0))}</td><td>${formatAriary(principal)}</td><td>${formatAriary(interets)}</td><td>${formatAriary(paiement)}</td></tr>`;
     }
     totalPrincipal += principal;
@@ -497,12 +657,11 @@ function calculerModePersonnalise(montant, tauxMensuel, duree, periodeGrace, pro
     </tr></thead><tbody>`;
 
   for (let mois = 1; mois <= duree; mois++) {
-    let interets, principal, paiement;
+    let interets = 0, principal = 0, paiement = 0;
     let rowClass = '';
     let adjusted = false;
     
     if (mois <= periodeGrace) {
-      // Période de grâce
       interets = capitalRestant * tauxMensuel;
       principal = 0;
       paiement = interets;
@@ -514,7 +673,7 @@ function calculerModePersonnalise(montant, tauxMensuel, duree, periodeGrace, pro
       interets = capitalRestant * tauxMensuel;
       
       if (period && period.amount > 0) {
-        let mensualiteDemandee = period.amount;
+        let mensualiteDemandee = Number(period.amount);
         
         // Calculer le principal qu'on obtiendrait avec cette mensualité
         let principalCalcule = mensualiteDemandee - interets;
@@ -559,8 +718,6 @@ function calculerModePersonnalise(montant, tauxMensuel, duree, periodeGrace, pro
       }
       
       capitalRestant -= principal;
-      
-      // Si le capital est remboursé, arrêter les remboursements
       if (capitalRestant < 0.01 && mois < duree) {
         capitalRestant = 0;
       }
@@ -617,6 +774,25 @@ function calculerModePersonnalise(montant, tauxMensuel, duree, periodeGrace, pro
 
   document.getElementById('tableauAmortissement').innerHTML = tableau;
 }
+
+/* ---------- Initialisation ---------- */
+updateProduit(); // pour appliquer taux produit si sélectionné
+// Attacher format initial aux champs existants
+document.addEventListener('DOMContentLoaded', () => {
+  // formate les valeurs initiales si présentes
+  mainNumericIdsInteger.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.value.trim() !== "") {
+      const parsed = parseNumberFromString(el.value);
+      if (!isNaN(parsed)) el.value = formatInputInteger(parsed);
+    }
+  });
+  const tauxEl = document.getElementById('taux');
+  if (tauxEl && tauxEl.value.trim() !== "") {
+    const parsed = parseNumberFromString(tauxEl.value);
+    if (!isNaN(parsed)) tauxEl.value = formatInputTaux(parsed);
+  }
+});
 </script>
 </body>
 </html>
